@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زاد المؤمن - المساعد الرقمي</title>
+    <!-- خط تجول + مكتبة Tailwind CSS للتصميم -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+                    colors: {
+                        gold: { DEFAULT: '#d6a85c', hover: '#b88d43' },
+                        darkBg: '#0f172a',
+                        sidebarBg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d6a85c; }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 flex h-screen overflow-hidden font-sans">
+
+    <!-- 1. القائمة الجانبية (Sidebar) -->
+    <aside id="sidebar" class="fixed inset-y-0 right-0 z-40 w-72 bg-sidebarBg border-l border-slate-700/50 transform translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col">
+        <!-- هيدر القائمة الجانبية -->
+        <div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+            <button id="new-chat-btn" class="flex-1 flex items-center justify-center gap-2 bg-gold hover:bg-gold-hover text-slate-900 font-bold py-2.5 px-4 rounded-xl transition shadow-md">
+                <span>➕</span>
+                <span>محادثة جديدة</span>
+            </button>
+            <button id="close-sidebar-btn" class="md:hidden text-slate-400 hover:text-white p-2 text-xl">✕</button>
+        </div>
+
+        <!-- قائمة المحادثات السابقة -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2" id="history-list">
+            <!-- سيتم إضافة المحادثات السابقة هنا تلقائياً بواسطة bot.js -->
+        </div>
+
+        <!-- الفوتر السفلي للقائمة الجانبية -->
+        <div class="p-4 border-t border-slate-700/50 text-xs text-slate-400 text-center">
+            تطوير وتصميم: <span class="text-gold font-bold">عمر</span> 🌙
+        </div>
+    </aside>
+
+    <!-- غطاء الشاشة للموبايل عند فتح القائمة -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden"></div>
+
+    <!-- 2. منطقه الدردشة الرئيسية -->
+    <main class="flex-1 flex flex-col h-full w-full relative">
+        
+        <!-- هيدر الصفحة الرئيسي -->
+        <header class="bg-sidebarBg/80 backdrop-blur border-b border-slate-700/50 p-3 flex items-center justify-between px-4">
+            <div class="flex items-center gap-3">
+                <button id="toggle-sidebar-btn" class="text-gold text-2xl p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    ☰
+                </button>
+                <div>
+                    <h1 class="font-bold text-gold text-base md:text-lg flex items-center gap-2">
+                        🌙 مساعد زاد المؤمن
+                    </h1>
+                    <p class="text-xs text-slate-400">باحث شرعي ومفتي رقمي مساعد</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- منطقة الرسائل -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 max-w-4xl w-full mx-auto flex flex-col">
+            <!-- الرسائل تظهر هنا تلقائياً -->
+        </div>
+
+        <!-- شريط الإدخال السفلي -->
+        <footer class="p-3 md:p-4 border-t border-slate-700/50 bg-darkBg">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- معاينة الملف المرفق قبل الإرسال -->
+                <div id="attachment-preview" class="hidden mb-2 p-2 bg-slate-800 rounded-lg flex items-center justify-between border border-gold/30">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <span id="file-type-icon" class="text-xl">📎</span>
+                        <span id="file-name" class="text-xs text-slate-200 truncate max-w-[200px]"></span>
+                    </div>
+                    <button id="remove-file-btn" class="text-slate-400 hover:text-red-400 text-sm px-2">✕</button>
+                </div>
+
+                <!-- نموذج الإرسال -->
+                <form id="chat-form" class="flex items-center gap-2 bg-sidebarBg border border-slate-700 rounded-2xl p-2 focus-within:border-gold transition">
+                    
+                    <!-- زر إرفاق الملفات (صور / فيديو) -->
+                    <label for="file-input" class="cursor-pointer text-slate-400 hover:text-gold p-2 text-xl transition flex items-center justify-center rounded-xl hover:bg-slate-800" title="إرفاق صورة أو فيديو">
+                        📷
+                    </label>
+                    <input type="file" id="file-input" accept="image/*,video/*" class="hidden">
+
+                    <!-- مربع النص -->
+                    <input type="text" id="chat-input" placeholder="اكتب سؤالك الشرعي هنا..." class="flex-1 bg-transparent border-none outline-none text-slate-100 placeholder-slate-400 text-sm md:text-base px-2">
+
+                    <!-- زر الإرسال -->
+                    <button type="submit" id="send-btn" class="bg-gold hover:bg-gold-hover text-slate-900 font-bold p-2.5 rounded-xl transition flex items-center justify-center shadow-md">
+                        ✈️
+                    </button>
+                </form>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ربط السكربت -->
+    <script src="bot.js"></script>
+</body>
+</html>
