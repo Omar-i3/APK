@@ -485,3 +485,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+// تسجيل Service Worker لتفعيل الـ PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+  });
+}
+// 📱 الكشف المباشر عن جهاز الآيفون وإظهار البنر إذا لم يكن الموقع مثبتاً كـ PWA
+document.addEventListener('DOMContentLoaded', () => {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+  // يظهر البنر فقط إذا كان الجهاز آيفون والموقع مفتوح عبر المتصفح وليس كـ تطبيق مثبّت
+  if (isIOS && !isStandalone) {
+    const iosBanner = document.getElementById('ios-install-banner');
+    if (iosBanner) iosBanner.classList.remove('hidden');
+  }
+});
