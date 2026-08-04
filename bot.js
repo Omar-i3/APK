@@ -1,112 +1,193 @@
 /* ==========================================================================
-   🌙 زاد المؤمن - السكربت الموحد للمساعد الرقمي (bot.js)
+   🌙 مساعد تبصرة الرقمي - السكربت الموحد (bot.js)
    تطوير وتصميم: عمر
    ========================================================================== */
 
-const WORKER_URL = "https://zad-bot-proxy.almohanadgamer.workers.dev"; //[span_0](start_span)[span_0](end_span)
+const firebaseConfig = {
+  apiKey: "AIzaSyBtBRNXE0El8yajD4KmrKHlD8-3lYG7rJc",
+  authDomain: "islamic-bot-omar.firebaseapp.com",
+  projectId: "islamic-bot-omar",
+  storageBucket: "islamic-bot-omar.firebasestorage.app",
+  messagingSenderId: "1026416229910",
+  appId: "1:1026416229910:web:e18f26fe9fc3703a43bf37",
+  measurementId: "G-B2SYM1YPGE"
+};
 
-// 1. فحص كافة الصفحات المتاحة في التطبيق[span_1](start_span)[span_1](end_span)
-const pathname = window.location.pathname; //[span_2](start_span)[span_2](end_span)
-const isDuaaPage = pathname.includes('duaa.html'); //[span_3](start_span)[span_3](end_span)
-const isAzkarPage = pathname.includes('azkar.html'); //[span_4](start_span)[span_4](end_span)
-const isEncyclopediaPage = pathname.includes('encyclopedia.html'); //[span_5](start_span)[span_5](end_span)
-const isNamesPage = pathname.includes('names.html'); //[span_6](start_span)[span_6](end_span)
-const isSunnahPage = pathname.includes('sunnah.html'); //[span_7](start_span)[span_7](end_span)
-const isStoriesPage = pathname.includes('stories.html'); //[span_8](start_span)[span_8](end_span)
-const isBooksPage = pathname.includes('books.html'); //[span_9](start_span)[span_9](end_span)
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// 2. تعليمات النظام الصارمة المأخوذة من الملفات القديمة[span_10](start_span)[span_10](end_span)
-let SYSTEM_INSTRUCTION = "أنت باحث شرعي ومفتي رقمي مساعد في موقع 'زاد المؤمن'، المطوّر والمصمّم من قِبَل (عمر). مهمتك الإجابة حصراً على الأسئلة الشرعية والدينية والفقهية بكل أدب واحترام. يُلزم عليك دائماً وأبداً دعم جميع الفتاوى والأحكام بذكر الأدلة الشرعية الصريحة والمباشرة من آيات القرآن الكريم والأحاديث النبوية الصحيحة مع ذكر تخريج الحديث (مثل: رواه البخاري، رواه مسلم، صححه الألباني)، والاعتماد على مصادر كبار علماء السنة مثل ابن باز وابن عثيمين وعثمان الخميس وغيرهم مع ذكر المصادر دائماً.\n\nتنبيهات صارمة جداً وضوابط عمل:\n1. مطوّر البوت والموقع: إذا سألك المستخدم من هو مطوّر أو صانع أو مبرمج هذا الموقع/البوت، أجب بوضوح واعتزاز بأن المطوّر والصانع هو (عمر).\n2. التخصص الحصري: إذا كان سؤال المستخدم خارج نطاق العلوم الشرعية والدين الإسلامي (مثل: الألعاب، البرمجة، الرياضة، الطقس، الأسئلة العامة)، يرجى الاعتذار منه بكل أدب ولطف، وإخباره بأنك مساعد مخصص حصراً للإجابات والعلوم الشرعية والدينية في موقع 'زاد المؤمن'.\n3. ضابط السلام الصارم: لا تبدأ إجابتك بالسلام ولا الترحيب (مثل: 'وعليكم السلام' أو 'أهلاً بك') إطلاقاً إلا إذا كتب المستخدم صراحة وبنص العبارة 'السلام عليكم' أو صيغها المباشرة (السلام عليكم / السلام عليكم ورحمة الله / السلام عليكم ورحمة الله وبركاته). أما إذا كتب كلمات مثل 'أهلاً' أو 'مرحباً' أو طرَح سؤاله مباشرة، فلا ترد بالسلام أبداً وابدأ بالإجابة مباشرة."; //[span_11](start_span)[span_11](end_span)
+const WORKER_URL = "https://zad-bot-proxy.almohanadgamer.workers.dev";
 
-// إضافة سياق خاص بكل صفحة للموديل[span_12](start_span)[span_12](end_span)
-if (isDuaaPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'خريطة الدعاء': المستخدم يتصفح حالياً قسم خريطة الدعاء. يُرجى تقديم إجابات متخصصة تدعم مفاهيم هذا القسم (تعريف الدعاء، علاقته بالقدر المبرم والمعلق، أسباب وشروط الاستجابة، موانع الاستجابة، وآداب الدعاء، والرد على الشبهات)."; //[span_13](start_span)[span_13](end_span)
-else if (isAzkarPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'الأذكار اليومية': المستخدم يتصفح حالياً قسم الأذكار. يُرجى تقديم إجابات متخصصة تدعم فضائل الأذكار (أذكار الصباح والمساء، أذكار الاستيقاظ والنوم، أذكار بعد الصلاة) وأحكام المداومة عليها وأوقاتها الشرعية الصحيحة."; //[span_14](start_span)[span_14](end_span)
-else if (isEncyclopediaPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'الموسوعة الإسلامية': المستخدم يتصفح حالياً قسم الموسوعة. يُرجى تقديم إجابات متخصصة حول محتويات الموسوعة وأقسامها المختلفة، والإرشاد إلى الأقسام المناسبة."; //[span_15](start_span)[span_15](end_span)
-else if (isNamesPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'أسماء الله الحسنى': المستخدم يتصفح حالياً قسم الأسماء. يُرجى تقديم إجابات متخصصة حول معاني أسماء الله الحسنى، وكيفية التوسل بها في الدعاء، والآيات والأحاديث المتعلقة بها."; //[span_16](start_span)[span_16](end_span)
-else if (isSunnahPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'السنن النبوية اليومية': المستخدم يتصفح قسم السنن. يُرجى تقديم إجابات حول السنن الرواتب، وهدي النبي ﷺ في الحياة اليومية والآداب الشرعية."; //[span_17](start_span)[span_17](end_span)
-else if (isStoriesPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'قصص وقبسات إيمانية': المستخدم يتصفح قسم القصص. يُرجى تقديم إجابات حول قصص الأنبياء والصحابة والدروس والعبر المستفادة منها لتقوية اليقين."; //[span_18](start_span)[span_18](end_span)
-else if (isBooksPage) SYSTEM_INSTRUCTION += "\n4. سياق خاص بصفحة 'المكتبة والكتب الإسلامية': المستخدم يتصفح قسم المكتبة. يُرجى تقديم إجابات حول أمهات الكتب والمؤلفين وإرشاد القارئ للمراجع النافعة."; //[span_19](start_span)[span_19](end_span)
+const SYSTEM_INSTRUCTION = `أنت باحث شرعي ومفتي رقمي مساعد في موقع 'تبصرة'، المطوّر والمصمّم من قِبَل (عمر). مهمتك الإجابة حصراً على الأسئلة الشرعية والدينية والفقهية بكل أدب واحترام. يُلزم عليك دائماً وأبداً دعم جميع الفتاوى والأحكام بذكر الأدلة الشرعية الصريحة والمباشرة من آيات القرآن الكريم والأحاديث النبوية الصحيحة مع ذكر تخريج الحديث (مثل: رواه البخاري، رواه مسلم، صححه الألباني)، والاعتماد على مصادر كبار علماء السنة مثل ابن باز وابن عثيمين وعثمان الخميس وغيرهم مع ذكر المصادر دائماً.
 
-// تحديد الرسائل الترحيبية الخاصة بكل صفحة[span_20](start_span)[span_20](end_span)
-function getPageWelcomeMessage() {
-    if (isDuaaPage) return "أهلاً بك في قسم خريطة الدعاء! 🤲 يمكنك سؤالي هنا عن أي شيء يتعلق بأحكام الدعاء، آدابه، أسباب وموانع الاستجابة، وسأجيبك فوراً مع الأدلة الشرعية بإذن الله."; //[span_21](start_span)[span_21](end_span)
-    if (isAzkarPage) return "أهلاً بك في ركن الأذكار! 📿 يمكنك سؤالي عن فضائل الأذكار، أوقاتها الشرعية، أو أحكام المداومة عليها وسأجيبك فوراً بالأدلة الشرعية الموثقة بإذن الله."; //[span_22](start_span)[span_22](end_span)
-    if (isEncyclopediaPage) return "أهلاً بك في الموسوعة الإسلامية! 📚 يمكنك سؤالي عن أي قسم من أقسام الموسوعة، وسأرشدك إلى ما ينفعك ويجيب على تساؤلاتك بإذن الله."; //[span_23](start_span)[span_23](end_span)
-    if (isNamesPage) return "أهلاً بك في قسم أسماء الله الحسنى! ✨ يمكنك سؤالي عن معاني الأسماء جل جلاله، وكيفية التوسل بها في الدعاء، وأثرها في تزكية النفس بإذن الله."; //[span_24](start_span)[span_24](end_span)
-    if (isSunnahPage) return "أهلاً بك في قسم السنن النبوية اليومية! 🌿 يمكنك سؤالي عن السنن المؤكدة، والرواتب اليومية، وفضائل اتباع هدي النبي ﷺ بإذن الله."; //[span_25](start_span)[span_25](end_span)
-    if (isStoriesPage) return "أهلاً بك في قسم القصص والقبسات الإيمانية! 📜 يمكنك سؤالي عن قصص الأنبياء والصحابة والدروس والعبر المستفادة منها بإذن الله."; //[span_26](start_span)[span_26](end_span)
-    if (isBooksPage) return "أهلاً بك في المكتبة والكتب الإسلامية! 📖 يمكنك سؤالي عن أمهات الكتب والمؤلفين وأفضل المراجع الشرعية والتفسير والحديث بإذن الله."; //[span_27](start_span)[span_27](end_span)
-    return "السلام عليكم ورحمة الله وبركاته. أنا **مساعد تبصرة الرقمي**، مرشدك الفقهي والحديثي في موقع 'زاد المؤمن'. يمكنك سؤالي عن الفتاوى والأحكام، وسأجيبك بأدلة موثقة من القرآن والسنة الصحيحة بإذن الله."; //[span_28](start_span)[span_28](end_span)
-}
+تنبيهات صارمة جداً وضوابط عمل:
+1. مطوّر البوت والموقع: إذا سألك المستخدم من هو مطوّر أو صانع أو مبرمج هذا الموقع/البوت، أجب بوضوح واعتزاز بأن المطوّر والصانع هو (عمر).
+2. التخصص الحصري: إذا كان سؤال المستخدم خارج نطاق العلوم الشرعية والدين الإسلامي (مثل: الألعاب، البرمجة، الرياضة، الطقس، الأسئلة العامة)، يرجى الاعتذار منه بكل أدب ولطف، وإخباره بأنك مساعد مخصص حصراً للإجابات والعلوم الشرعية والدينية في موقع 'تبصرة'.
+3. ضابط السلام الصارم: لا تبدأ إجابتك بالسلام ولا الترحيب (مثل: 'وعليكم السلام' أو 'أهلاً بك') إطلاقاً إلا إذا كتب المستخدم صراحة وبنص العبارة 'السلام عليكم' أو صيغها المباشرة. أما إذا كتب كلمات مثل 'أهلاً' أو 'مرحباً' أو طرَح سؤاله مباشرة، فلا ترد بالسلام أبداً وابدأ بالإجابة مباشرة.`;
 
-// 3. إدارة البيانات[span_29](start_span)[span_29](end_span)
-let currentChatHistory = JSON.parse(localStorage.getItem('zad_current_active_chat')) || [];
-let archivedChats = JSON.parse(localStorage.getItem('zad_archived_chats')) || [];
-let currentAttachedFile = null;
+let currentUser = null;
+let currentChatId = localStorage.getItem('tabsirah_current_chat_id') || Date.now();
+let currentChatHistory = JSON.parse(localStorage.getItem('tabsirah_current_active_chat')) || [];
+let archivedChats = [];
+
+// ⚙️ دالة فتح نافذة الإعدادات المباشرة
+window.openAccountModal = function() {
+    if (!currentUser) {
+        alert("يرجى تسجيل الدخول أولاً للوصول إلى إعدادات الحساب!");
+        return;
+    }
+
+    const modal = document.getElementById('account-modal');
+    if (!modal) return;
+
+    document.getElementById('modal-user-email').textContent = currentUser.email || '';
+    document.getElementById('modal-display-name-input').value = currentUser.displayName || '';
+    
+    const avatarEl = document.getElementById('modal-user-avatar');
+    if (avatarEl) {
+        if (currentUser.photoURL) {
+            avatarEl.innerHTML = `<img src="${currentUser.photoURL}" class="w-full h-full object-cover rounded-full">`;
+        } else {
+            avatarEl.textContent = currentUser.displayName ? currentUser.displayName[0] : '👤';
+        }
+    }
+
+    modal.style.display = 'flex';
+    if (window.lucide) lucide.createIcons();
+};
+
+// ❌ دالة إغلاق النافذة
+window.closeAccountModal = function() {
+    const modal = document.getElementById('account-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+// 👤 دالة النقر على بطاقة الحساب
+window.handleProfileCardClick = function(e) {
+    if (e.target.closest('#auth-btn')) {
+        window.handleAuthAction();
+        return;
+    }
+
+    if (currentUser) {
+        window.openAccountModal();
+    } else {
+        window.handleAuthAction();
+    }
+};
+
+window.handleAuthAction = function() {
+    if (currentUser) {
+        auth.signOut();
+        window.closeAccountModal();
+    } else {
+        if (window.location.protocol === 'file:') {
+            alert("⚠️ لتسجيل الدخول، يرجى تشغيل الموقع عبر Live Server أو استضافة حية.");
+            return;
+        }
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(err => alert("خطأ في تسجيل الدخول: " + err.message));
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
-    const fileInput = document.getElementById('file-input');
-    const attachmentPreview = document.getElementById('attachment-preview');
-    const fileNameSpan = document.getElementById('file-name');
-    const fileTypeIcon = document.getElementById('file-type-icon');
-    const removeFileBtn = document.getElementById('remove-file-btn');
+    const saveAccountChangesBtn = document.getElementById('save-account-changes-btn');
+    const modalLogoutBtn = document.getElementById('modal-logout-btn');
+    const accountModal = document.getElementById('account-modal');
 
-    // إعداد عناصر القائمة الجانبية
-    setupSidebarUI();
-
-    // عرض المحادثة الحالية أو الرسالة الترحيبية
-    if (currentChatHistory.length > 0) {
-        currentChatHistory.forEach(msg => appendMessageUI(msg.content, msg.role === 'user' ? 'user' : 'bot'));
-    } else {
-        const welcomeMsg = getPageWelcomeMessage();
-        appendMessageUI(welcomeMsg, 'bot');
-        currentChatHistory.push({ role: "assistant", content: welcomeMsg });
-        saveCurrentChat();
-    }
-
-    // معالجة اختيار الملفات (صور / فيديو)
-    fileInput?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        currentAttachedFile = file;
-        fileNameSpan.textContent = file.name;
-        fileTypeIcon.textContent = file.type.startsWith('image/') ? '🖼️' : '🎥';
-        attachmentPreview.classList.remove('hidden');
+    chatInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm?.dispatchEvent(new Event('submit'));
+        }
     });
 
-    removeFileBtn?.addEventListener('click', clearAttachment);
+    chatInput?.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 
-    function clearAttachment() {
-        currentAttachedFile = null;
-        if (fileInput) fileInput.value = '';
-        attachmentPreview?.classList.add('hidden');
+    auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        updateUserUI(user);
+        loadArchivedChats();
+    });
+
+    accountModal?.addEventListener('click', (e) => {
+        if (e.target === accountModal) window.closeAccountModal();
+    });
+
+    saveAccountChangesBtn?.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const newNameInput = document.getElementById('modal-display-name-input');
+        const newName = newNameInput?.value.trim();
+
+        if (!newName) {
+            alert("يرجى إدخال اسم صحيح.");
+            return;
+        }
+
+        try {
+            await currentUser.updateProfile({ displayName: newName });
+            updateUserUI(currentUser);
+            window.closeAccountModal();
+            alert("تم تحديث اسمك بنجاح! ✨");
+        } catch (error) {
+            alert("حدث خطأ أثناء تعديل الاسم: " + error.message);
+        }
+    });
+
+    modalLogoutBtn?.addEventListener('click', () => {
+        auth.signOut();
+        window.closeAccountModal();
+    });
+
+    function updateUserUI(user) {
+        const userNameEl = document.getElementById('user-name');
+        const userStatusEl = document.getElementById('user-status');
+        const userAvatarEl = document.getElementById('user-avatar');
+        const authBtn = document.getElementById('auth-btn');
+        
+        if (user) {
+            userNameEl.textContent = user.displayName || 'مستخدم مسجّل';
+            userStatusEl.textContent = user.email;
+            authBtn.textContent = 'خروج';
+            authBtn.className = 'text-xs bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white px-2 py-1 rounded-lg transition font-medium';
+            userAvatarEl.innerHTML = user.photoURL ? `<img src="${user.photoURL}" class="w-full h-full object-cover">` : (user.displayName ? user.displayName[0] : '👤');
+        } else {
+            userNameEl.textContent = 'زائر';
+            userStatusEl.textContent = 'غير مسجّل';
+            authBtn.textContent = 'دخول';
+            authBtn.className = 'text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg transition font-medium';
+            userAvatarEl.innerHTML = '👤';
+        }
     }
 
-    // إرسال الرسالة
+    setupSidebarUI();
+    renderChatView();
+
     chatForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userText = chatInput.value.trim();
-        if (!userText && !currentAttachedFile) return;
+        if (!userText) return;
 
-        let displayMessage = userText;
-        if (currentAttachedFile) {
-            displayMessage = `[مرفق: ${currentAttachedFile.name}]\n` + userText;
-        }
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) welcomeScreen.remove();
 
-        // تعطيل الإدخال أثناء المعالجة
         chatInput.disabled = true;
-        appendMessageUI(displayMessage, 'user');
+        appendMessageUI(userText, 'user');
         chatInput.value = '';
+        chatInput.style.height = 'auto';
 
-        const loadingDiv = appendMessageUI('⏳ جاري التفكير وتحضير الرد الشرعي...', 'bot', true);
-
-        currentChatHistory.push({ role: "user", content: displayMessage });
+        const loadingDiv = appendLoadingBubble();
+        currentChatHistory.push({ role: "user", content: userText });
         saveCurrentChat();
-        clearAttachment();
 
         const messagesPayload = [
             { role: "system", content: SYSTEM_INSTRUCTION },
@@ -129,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             let botResponse = data.choices[0].message.content;
 
-            // تطبيق ضابط السلام الصارم[span_30](start_span)[span_30](end_span)
             const userSaidSalam = /السلام\s+عليكم/i.test(userText);
             if (!userSaidSalam) {
                 botResponse = botResponse.replace(/^(وعليكم السلام ورحمة الله وبركاته|وعليكم السلام ورحمة الله|وعليكم السلام|السلام عليكم ورحمة الله وبركاته|السلام عليكم)[!،.\n\s]*/gi, '').trim();
@@ -140,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentChatHistory.push({ role: "assistant", content: botResponse });
             saveCurrentChat();
-            renderSidebarHistory();
+            await saveChatSession();
 
         } catch (error) {
             if (loadingDiv) loadingDiv.remove();
@@ -151,55 +231,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // دالة رسم الرسائل في الواجهة ودعم الخط العريض (Bold)
-    function appendMessageUI(text, sender, isLoading = false) {
+    function appendMessageUI(text, sender) {
         const msgWrapper = document.createElement('div');
-        msgWrapper.className = `flex flex-col ${sender === 'user' ? 'items-end' : 'items-start'} my-1`;
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = sender === 'user'
-            ? 'bg-gold text-slate-950 font-medium px-4 py-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm leading-relaxed shadow'
-            : 'bg-slate-800/90 border border-slate-700 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-none max-w-[90%] text-sm leading-relaxed shadow';
-
-        const contentDiv = document.createElement('div');
-        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-        contentDiv.innerHTML = formattedText;
-        msgDiv.appendChild(contentDiv);
-
-        // أزرار النسخ والمشاركة للذكاء الاصطناعي[span_31](start_span)[span_31](end_span)
-        if (sender === 'bot' && !isLoading) {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'flex items-center gap-2 mt-3 pt-2 border-t border-slate-700/60 text-xs';
-
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'text-gold hover:underline flex items-center gap-1';
-            copyBtn.innerHTML = '📋 نسخ';
-            copyBtn.onclick = () => {
-                navigator.clipboard.writeText(text);
-                copyBtn.innerHTML = '✅ تم';
-                setTimeout(() => copyBtn.innerHTML = '📋 نسخ', 2000);
-            };
-
-            const waBtn = document.createElement('button');
-            waBtn.className = 'text-emerald-400 hover:underline flex items-center gap-1';
-            waBtn.innerHTML = '🟢 واتساب';
-            waBtn.onclick = () => {
-                const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent("*من موقع زاد المؤمن:*\n\n" + text)}`;
-                window.open(shareUrl, '_blank');
-            };
-
-            actionsDiv.appendChild(copyBtn);
-            actionsDiv.appendChild(waBtn);
-            msgDiv.appendChild(actionsDiv);
+        
+        if (sender === 'user') {
+            msgWrapper.className = 'flex justify-end my-2';
+            msgWrapper.innerHTML = `
+                <div class="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tl-none max-w-xl text-sm leading-relaxed shadow-sm">
+                    ${formatText(text)}
+                </div>
+            `;
+        } else {
+            msgWrapper.className = 'flex gap-2.5 justify-start max-w-3xl my-2';
+            const msgId = 'msg-' + Date.now();
+            msgWrapper.innerHTML = `
+                <div class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0 mt-0.5">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-2xl rounded-tr-none text-sm leading-relaxed shadow-sm space-y-2 w-full">
+                    <div>${formatText(text)}</div>
+                    <div class="flex items-center gap-3 mt-2 pt-2 border-t border-slate-800/80 text-xs text-slate-400">
+                        <button onclick="copyToClipboard('${msgId}', this)" class="hover:text-emerald-400 flex items-center gap-1 transition">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> نسخ
+                        </button>
+                        <button onclick="shareWhatsApp('${msgId}')" class="hover:text-emerald-400 flex items-center gap-1 transition">
+                            <i data-lucide="share-2" class="w-3.5 h-3.5"></i> واتساب
+                        </button>
+                    </div>
+                </div>
+            `;
+            msgWrapper.setAttribute('data-raw-text', text);
+            msgWrapper.id = msgId;
         }
 
-        msgWrapper.appendChild(msgDiv);
         chatMessages.appendChild(msgWrapper);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (window.lucide) lucide.createIcons();
         return msgWrapper;
     }
 
-    // إدارة القائمة الجانبية السلسة
+    function appendLoadingBubble() {
+        const id = 'loading-' + Date.now();
+        const msgDiv = document.createElement('div');
+        msgDiv.id = id;
+        msgDiv.className = 'flex gap-2.5 justify-start max-w-3xl my-2';
+        msgDiv.innerHTML = `
+            <div class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 text-slate-400 px-4 py-2.5 rounded-2xl rounded-tr-none text-sm flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+                جاري التفكير وتحضير الرد الشرعي...
+            </div>
+        `;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (window.lucide) lucide.createIcons();
+        return msgDiv;
+    }
+
+    function formatText(text) {
+        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    }
+
     function setupSidebarUI() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
@@ -208,8 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const newChatBtn = document.getElementById('new-chat-btn');
 
         const toggleSidebar = () => {
-            sidebar.classList.toggle('translate-x-full');
-            overlay.classList.toggle('hidden');
+            sidebar?.classList.toggle('translate-x-full');
+            overlay?.classList.toggle('hidden');
         };
 
         toggleBtn?.addEventListener('click', toggleSidebar);
@@ -217,95 +311,177 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay?.addEventListener('click', toggleSidebar);
 
         newChatBtn?.addEventListener('click', () => {
-            archiveCurrentChat();
             currentChatHistory = [];
-            localStorage.removeItem('zad_current_active_chat');
-            chatMessages.innerHTML = '';
-            
-            const welcomeMsg = getPageWelcomeMessage();
-            appendMessageUI(welcomeMsg, 'bot');
-            currentChatHistory.push({ role: "assistant", content: welcomeMsg });
-            saveCurrentChat();
-            renderSidebarHistory();
+            currentChatId = Date.now();
+            localStorage.setItem('tabsirah_current_chat_id', currentChatId);
+            localStorage.removeItem('tabsirah_current_active_chat');
+            renderChatView();
+            loadArchivedChats();
             if (window.innerWidth < 768) toggleSidebar();
         });
-
-        renderSidebarHistory();
     }
 
-    // تعديل الأرشفة لمنع حفظ المحادثات التي لا تحتوي على أسئلة من المستخدم
-    function archiveCurrentChat() {
+    function renderChatView() {
+        chatMessages.innerHTML = '';
+        if (currentChatHistory.length > 0) {
+            currentChatHistory.forEach(msg => appendMessageUI(msg.content, msg.role === 'user' ? 'user' : 'bot'));
+        } else {
+            renderWelcomeScreen();
+        }
+    }
+
+    function renderWelcomeScreen() {
+        chatMessages.innerHTML = `
+            <div id="welcome-screen" class="flex flex-col items-center justify-center min-h-[65vh] text-center space-y-5">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg">
+                    <i data-lucide="sparkles" class="w-7 h-7"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-xl font-bold text-slate-100">السلام عليكم ورحمة الله وبركاته</h2>
+                    <p class="text-slate-400 text-xs max-w-sm">أنا مساعد تبصرة الرقمي، كيف يمكنني مساعدتك اليوم؟</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl pt-2">
+                    <button onclick="sendQuickPrompt('ما هي آداب وأوقات إجابة الدعاء؟')" class="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-xl text-right transition group">
+                        <p class="text-xs font-semibold text-slate-200 group-hover:text-emerald-400">آداب الدعاء المستجاب</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">تعرف على الأوقات والشروط التي يُرجى فيها القبول</p>
+                    </button>
+                    <button onclick="sendQuickPrompt('اذكر لي أذكار الصباح كاملة')" class="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-xl text-right transition group">
+                        <p class="text-xs font-semibold text-slate-200 group-hover:text-emerald-400">أذكار الصباح والمساء</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">الأدعية والأذكار الحافظة من السنة النبوية</p>
+                    </button>
+                </div>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function saveCurrentChat() {
+        localStorage.setItem('tabsirah_current_active_chat', JSON.stringify(currentChatHistory));
+        localStorage.setItem('tabsirah_current_chat_id', currentChatId);
+    }
+
+    async function saveChatSession() {
         if (!currentChatHistory || currentChatHistory.length === 0) return;
-        
-        const hasUserMsg = currentChatHistory.some(m => m.role === 'user');
-        if (!hasUserMsg) return;
+        if (!currentChatHistory.some(m => m.role === 'user')) return;
 
-        const timeString = new Date().toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' });
-        
-        archivedChats.unshift({ id: Date.now(), date: timeString, messages: [...currentChatHistory] });
-        if (archivedChats.length > 25) archivedChats.pop();
-        
-        localStorage.setItem('zad_archived_chats', JSON.stringify(archivedChats));
+        const sessionData = {
+            id: Number(currentChatId),
+            date: new Date().toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' }),
+            messages: [...currentChatHistory]
+        };
+
+        if (currentUser) {
+            await db.collection('users').doc(currentUser.uid).collection('chats').doc(String(sessionData.id)).set(sessionData);
+        } else {
+            let localArchives = JSON.parse(localStorage.getItem('tabsirah_archived_chats')) || [];
+            const index = localArchives.findIndex(s => Number(s.id) === Number(sessionData.id));
+            if (index !== -1) {
+                localArchives[index] = sessionData;
+            } else {
+                localArchives.unshift(sessionData);
+            }
+            if (localArchives.length > 25) localArchives.pop();
+            localStorage.setItem('tabsirah_archived_chats', JSON.stringify(localArchives));
+            renderSidebarHistory(localArchives);
+        }
     }
 
-    // دالة عرض السجل وتصفية الخانات الفارغة وتنظيف عناوين المحادثات
-    function renderSidebarHistory() {
+    async function loadArchivedChats() {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('chats').orderBy('id', 'desc').limit(25).onSnapshot(snapshot => {
+                archivedChats = snapshot.docs.map(doc => doc.data());
+                renderSidebarHistory(archivedChats);
+            });
+        } else {
+            archivedChats = JSON.parse(localStorage.getItem('tabsirah_archived_chats')) || [];
+            renderSidebarHistory(archivedChats);
+        }
+    }
+
+    function renderSidebarHistory(archives) {
         const historyContainer = document.getElementById('history-list');
         if (!historyContainer) return;
 
-        let archives = JSON.parse(localStorage.getItem('zad_archived_chats')) || [];
-        
         archives = archives.filter(session => session.messages && session.messages.some(m => m.role === 'user'));
-        localStorage.setItem('zad_archived_chats', JSON.stringify(archives));
 
         if (archives.length === 0) {
-            historyContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">لا توجد محادثات مؤرشفة</p>`;
+            historyContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-3">لا توجد محادثات</p>`;
             return;
         }
 
         historyContainer.innerHTML = archives.map((session) => {
             const firstUserMsg = session.messages.find(m => m.role === 'user')?.content || 'محادثة';
-            const cleanTitle = firstUserMsg.replace(/^\[مرفق:.*?\]\n?/, '').trim();
-            const shortTitle = cleanTitle.length > 22 ? cleanTitle.substring(0, 22) + '...' : cleanTitle;
+            const shortTitle = firstUserMsg.length > 20 ? firstUserMsg.substring(0, 20) + '...' : firstUserMsg;
+            const activeClass = Number(session.id) === Number(currentChatId) ? 'bg-slate-800/90 border-emerald-500/30' : '';
             
             return `
-                <div class="group flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800 transition cursor-pointer border border-transparent hover:border-slate-700" onclick="resumeSession(${session.id})">
+                <div class="group flex items-center justify-between p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer border border-transparent ${activeClass}" onclick="resumeSession(${session.id})">
                     <div class="flex items-center gap-2 overflow-hidden">
-                        <span class="text-xs">💬</span>
+                        <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
                         <span class="text-xs text-slate-300 truncate font-medium">${shortTitle}</span>
                     </div>
-                    <button onclick="event.stopPropagation(); deleteSession(${session.id})" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 text-xs p-1 transition" title="حذف">✕</button>
+                    <button onclick="event.stopPropagation(); deleteSession(${session.id})" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 text-xs p-0.5 transition">✕</button>
                 </div>
             `;
         }).join('');
+        if (window.lucide) lucide.createIcons();
     }
 
-    function saveCurrentChat() {
-        localStorage.setItem('zad_current_active_chat', JSON.stringify(currentChatHistory));
-    }
-
-    // دوال استكمال وحذف المحادثات من القائمة الجانبية
-    window.resumeSession = (id) => {
-        archiveCurrentChat();
-        const archives = JSON.parse(localStorage.getItem('zad_archived_chats')) || [];
-        const index = archives.findIndex(s => s.id === id);
-        if (index === -1) return;
-
-        const selected = archives.splice(index, 1)[0];
-        currentChatHistory = selected.messages;
-        
-        localStorage.setItem('zad_archived_chats', JSON.stringify(archives));
-        saveCurrentChat();
-
-        chatMessages.innerHTML = '';
-        currentChatHistory.forEach(msg => appendMessageUI(msg.content, msg.role === 'user' ? 'user' : 'bot'));
-        renderSidebarHistory();
+    window.sendQuickPrompt = (text) => {
+        const input = document.getElementById('chat-input');
+        if (input) {
+            input.value = text;
+            document.getElementById('chat-form')?.dispatchEvent(new Event('submit'));
+        }
     };
 
-    window.deleteSession = (id) => {
-        let archives = JSON.parse(localStorage.getItem('zad_archived_chats')) || [];
-        archives = archives.filter(s => s.id !== id);
-        localStorage.setItem('zad_archived_chats', JSON.stringify(archives));
-        renderSidebarHistory();
+    window.resumeSession = (id) => {
+        const selected = archivedChats.find(s => Number(s.id) === Number(id));
+        if (!selected) return;
+
+        currentChatId = selected.id;
+        currentChatHistory = selected.messages;
+        saveCurrentChat();
+        renderChatView();
+        renderSidebarHistory(archivedChats);
+    };
+
+    window.deleteSession = async (id) => {
+        if (currentUser) {
+            await db.collection('users').doc(currentUser.uid).collection('chats').doc(String(id)).delete();
+        } else {
+            archivedChats = archivedChats.filter(s => Number(s.id) !== Number(id));
+            localStorage.setItem('tabsirah_archived_chats', JSON.stringify(archivedChats));
+            renderSidebarHistory(archivedChats);
+        }
+
+        if (Number(currentChatId) === Number(id)) {
+            currentChatHistory = [];
+            currentChatId = Date.now();
+            saveCurrentChat();
+            renderChatView();
+        }
+    };
+
+    window.copyToClipboard = (msgId, btn) => {
+        const el = document.getElementById(msgId);
+        const text = el ? el.getAttribute('data-raw-text') : '';
+        if (text) {
+            navigator.clipboard.writeText(text);
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> تم`;
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+                btn.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i> نسخ`;
+                if (window.lucide) lucide.createIcons();
+            }, 2000);
+        }
+    };
+
+    window.shareWhatsApp = (msgId) => {
+        const el = document.getElementById(msgId);
+        const text = el ? el.getAttribute('data-raw-text') : '';
+        if (text) {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("*من تطبيق تبصرة:*\n\n" + text)}`, '_blank');
+        }
     };
 });
