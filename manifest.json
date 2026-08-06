@@ -9,9 +9,10 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "bot-logo.png",
+      "src": "bot-logo.png?v=2",
       "sizes": "192x192 512x512",
       "type": "image/png"
+
     }
   ]
 }
